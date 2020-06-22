@@ -151,6 +151,9 @@ class bdist_wheel(Command):
                      "zipfile compression (one of: {})"
                      " (default: 'deflated')"
                      .format(', '.join(supported_compressions))),
+                    ('compresslevel=', None,
+                     "zipfile compression level"
+                     " (default: '3')"),
                     ('python-tag=', None,
                      "Python implementation compatibility tag"
                      " (default: '%s')" % (python_tag())),
@@ -181,6 +184,7 @@ class bdist_wheel(Command):
         self.group = None
         self.universal = False
         self.compression = 'deflated'
+        self.compresslevel = 3
         self.python_tag = python_tag()
         self.build_number = None
         self.py_limited_api = False
@@ -348,7 +352,7 @@ class bdist_wheel(Command):
             os.makedirs(self.dist_dir)
 
         wheel_path = os.path.join(self.dist_dir, archive_basename + '.whl')
-        with WheelFile(wheel_path, 'w', self.compression) as wf:
+        with WheelFile(wheel_path, 'w', self.compression, self.compresslevel) as wf:
             wf.write_files(archive_root)
 
         # Add to 'Distribution.dist_files' so that the "upload" command works

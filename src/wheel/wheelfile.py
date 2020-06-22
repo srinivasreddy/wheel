@@ -35,13 +35,14 @@ class WheelFile(ZipFile):
 
     _default_algorithm = hashlib.sha256
 
-    def __init__(self, file, mode='r', compression=ZIP_DEFLATED):
+    def __init__(self, file, mode='r', compression=ZIP_DEFLATED, compresslevel=3):
         basename = os.path.basename(file)
         self.parsed_filename = WHEEL_INFO_RE.match(basename)
         if not basename.endswith('.whl') or self.parsed_filename is None:
             raise WheelError("Bad wheel filename {!r}".format(basename))
 
-        ZipFile.__init__(self, file, mode, compression=compression, allowZip64=True)
+        ZipFile.__init__(self, file, mode, compression=compression,
+                         allowZip64=True, compresslevel=compresslevel)
 
         self.dist_info_path = '{}.dist-info'.format(self.parsed_filename.group('namever'))
         self.record_path = self.dist_info_path + '/RECORD'
