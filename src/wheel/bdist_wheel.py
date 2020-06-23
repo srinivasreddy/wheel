@@ -152,7 +152,7 @@ class bdist_wheel(Command):
                      " (default: 'deflated')"
                      .format(', '.join(supported_compressions))),
                     ('compresslevel=', None,
-                     "zipfile compression level"
+                     "zipfile compression level. This option works only on 3.7+"
                      " (default: '3')"),
                     ('python-tag=', None,
                      "Python implementation compatibility tag"

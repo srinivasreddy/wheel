@@ -5,6 +5,7 @@ import hashlib
 import os.path
 import re
 import stat
+import sys
 import time
 from collections import OrderedDict
 from distutils import log as logger
@@ -40,10 +41,11 @@ class WheelFile(ZipFile):
         self.parsed_filename = WHEEL_INFO_RE.match(basename)
         if not basename.endswith('.whl') or self.parsed_filename is None:
             raise WheelError("Bad wheel filename {!r}".format(basename))
-
-        ZipFile.__init__(self, file, mode, compression=compression,
-                         allowZip64=True, compresslevel=compresslevel)
-
+        if sys.version_info[0:2] >= (3, 7):
+            ZipFile.__init__(self, file, mode, compression=compression,
+                             allowZip64=True, compresslevel=compresslevel)
+        else:
+            ZipFile.__init__(self, file, mode, compression=compression, allowZip64=True)
         self.dist_info_path = '{}.dist-info'.format(self.parsed_filename.group('namever'))
         self.record_path = self.dist_info_path + '/RECORD'
         self._file_hashes = OrderedDict()
@@ -136,10 +138,16 @@ class WheelFile(ZipFile):
         zinfo = ZipInfo(arcname or filename, date_time=get_zipinfo_datetime(st.st_mtime))
         zinfo.external_attr = (stat.S_IMODE(st.st_mode) | stat.S_IFMT(st.st_mode)) << 16
         zinfo.compress_type = compress_type or self.compression
-        self.writestr(zinfo, data, compress_type)
+        if sys.version_info[0:2] >= (3, 7):
+            self.writestr(zinfo, data, compress_type, self.compresslevel)
+        else:
+            self.writestr(zinfo, data, compress_type)
 
-    def writestr(self, zinfo_or_arcname, bytes, compress_type=None):
-        ZipFile.writestr(self, zinfo_or_arcname, bytes, compress_type)
+    def writestr(self, zinfo_or_arcname, bytes, compress_type=None, compresslevel=3):
+        if sys.version_info[0:2] >= (3, 7):
+            ZipFile.writestr(self, zinfo_or_arcname, bytes, compress_type, compresslevel=compresslevel)
+        else:
+            ZipFile.writestr(self, zinfo_or_arcname, bytes, compress_type)
         fname = (zinfo_or_arcname.filename if isinstance(zinfo_or_arcname, ZipInfo)
                  else zinfo_or_arcname)
         logger.info("adding '%s'", fname)
