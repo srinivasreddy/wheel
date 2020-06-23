@@ -153,7 +153,7 @@ class bdist_wheel(Command):
                      .format(', '.join(supported_compressions))),
                     ('compresslevel=', None,
                      "zipfile compression level. This option works only on 3.7+"
-                     " (default: '3')"),
+                     " (default: 3)"),
                     ('python-tag=', None,
                      "Python implementation compatibility tag"
                      " (default: '%s')" % (python_tag())),
@@ -202,6 +202,15 @@ class bdist_wheel(Command):
             self.compression = self.supported_compressions[self.compression]
         except KeyError:
             raise ValueError('Unsupported compression: {}'.format(self.compression))
+
+        if sys.version_info >= (3, 7):
+            try:
+                self.compresslevel = int(self.compresslevel)
+            except ValueError:
+                raise ValueError('compresslevel should be an integer and should be between 1 and 9.')
+
+            if not 0 < self.compresslevel <= 9:
+                raise ValueError('compresslevel should be between 1 and 9.')
 
         need_options = ('dist_dir', 'plat_name', 'skip_build')
 

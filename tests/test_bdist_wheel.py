@@ -146,3 +146,16 @@ def test_compression(dummy_dist, monkeypatch, tmpdir, option, compress_type):
         assert 'dummy_dist-1.0.dist-info/METADATA' in filenames
         for zinfo in wf.filelist:
             assert zinfo.compress_type == compress_type
+
+
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='compresslevel test only works on python3.7+')
+@pytest.mark.parametrize('option, compress_type', list(bdist_wheel.supported_compressions.items()),
+                         ids=list(bdist_wheel.supported_compressions))
+@pytest.mark.parametrize('compresslevel', list(range(1, 10)))
+def test_compresslevel(dummy_dist, monkeypatch, tmpdir, option, compress_type, compresslevel):
+    monkeypatch.chdir(dummy_dist)
+    subprocess.check_call([sys.executable, 'setup.py', 'bdist_wheel', '-b', str(tmpdir),
+                           '--universal', '--compression={}'.format(option),
+                           '--compresslevel={}'.format(compresslevel)])
+    with WheelFile('dist/dummy_dist-1.0-py2.py3-none-any.whl') as wf:
+        assert wf.compresslevel == int(compresslevel)
